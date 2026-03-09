@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saverglass — Delphi + Oracle Guide</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <span class="glass-icon">🍾</span>
+    <div>
+      <h1>Saverglass — Prépa Entretien</h1>
+      <p>Système de Gestion de Production · Delphi + Oracle</p>
+      <div class="badges">
+        <span class="badge">Delphi 12 Athens</span>
+        <span class="badge">Oracle 19c</span>
+        <span class="badge">ADO/FireDAC</span>
+        <span class="badge">3-Tier Architecture</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('projet')">🏭 Le Projet</div>
+    <div class="tab" onclick="showTab('delphi')">⚡ Delphi Fondamentaux</div>
+    <div class="tab" onclick="showTab('oracle')">🗄️ Oracle & SQL</div>
+    <div class="tab" onclick="showTab('persistance')">💾 Persistance</div>
+    <div class="tab" onclick="showTab('quiz')">🎯 Quiz Entretien</div>
+    <div class="tab" onclick="showTab('cheat')">📋 Cheat Sheet</div>
+  </div>
+
+  <!-- ===================== PROJET ===================== -->
+  <div class="tab-content active" id="tab-projet">
+
+    <div class="card">
+      <h2>🏭 Projet : GlassTrack — Gestion de Production Saverglass</h2>
+      <p>Application de suivi de production de flacons en verre pour une verrerie industrielle. Gestion des commandes, lots de fabrication, contrôle qualité et stocks.</p>
+
+      <h3>Contexte métier</h3>
+      <p>Saverglass fabrique des flacons de luxe (parfums, spiritueux, vins). Chaque flacon passe par : <strong style="color:#c8a050">Conception → Moule → Fusion → Formage → Contrôle qualité → Expédition</strong>.</p>
+
+      <div class="arch-diagram" style="margin-top:1rem;">
+        <div class="arch-layer ui" onclick="this.style.background='rgba(199,146,234,0.05)'">
+          <div class="layer-name">🖥️ Couche Présentation</div>
+          <div class="layer-desc">Forms Delphi — TForm, TGrid, TDBGrid, TPanel</div>
+          <div class="layer-tech">frmCommandes.pas / frmProduction.pas</div>
+        </div>
+        <div class="arch-arrow">↕ Appels méthodes</div>
+        <div class="arch-layer bll" onclick="this.style.background='rgba(200,134,10,0.05)'">
+          <div class="layer-name">⚙️ Couche Métier (BLL)</div>
+          <div class="layer-desc">Classes Pascal — TCommande, TLotProduction, TFlacon</div>
+          <div class="layer-tech">uCommande.pas / uProduction.pas</div>
+        </div>
+        <div class="arch-arrow">↕ CRUD</div>
+        <div class="arch-layer dal" onclick="this.style.background='rgba(74,144,217,0.05)'">
+          <div class="layer-name">🔌 Couche Accès Données (DAL)</div>
+          <div class="layer-desc">DataModules — TFDConnection, TFDQuery, TFDTable</div>
+          <div class="layer-tech">dmDatabase.pas / dmCommandes.pas</div>
+        </div>
+        <div class="arch-arrow">↕ OCI / FireDAC</div>
+        <div class="arch-layer db" onclick="this.style.background='rgba(46,204,113,0.05)'">
+          <div class="layer-name">🗄️ Oracle 19c</div>
+          <div class="layer-desc">Tables, Séquences, Triggers, Packages PL/SQL</div>
+          <div class="layer-tech">SAVERGLASS schema</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📊 Schéma de base de données</h2>
+      <div class="schema-diagram">
+        <div class="schema-table">
+          <div class="table-header">CLIENTS</div>
+          <div class="col-row"><span class="pk">🔑 CLIENT_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span>NOM</span><span class="col-type">VARCHAR2(100)</span></div>
+          <div class="col-row"><span>PAYS</span><span class="col-type">VARCHAR2(50)</span></div>
+          <div class="col-row"><span>SEGMENT</span><span class="col-type">VARCHAR2(20)</span></div>
+        </div>
+        <div class="schema-table">
+          <div class="table-header">COMMANDES</div>
+          <div class="col-row"><span class="pk">🔑 CMD_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span class="fk">🔗 CLIENT_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span>DATE_CMD</span><span class="col-type">DATE</span></div>
+          <div class="col-row"><span>STATUT</span><span class="col-type">VARCHAR2(20)</span></div>
+          <div class="col-row"><span>QUANTITE</span><span class="col-type">NUMBER(8)</span></div>
+        </div>
+        <div class="schema-table">
+          <div class="table-header">FLACONS</div>
+          <div class="col-row"><span class="pk">🔑 FLACON_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span>REFERENCE</span><span class="col-type">VARCHAR2(30)</span></div>
+          <div class="col-row"><span>CONTENANCE</span><span class="col-type">NUMBER(6,2)</span></div>
+          <div class="col-row"><span>COULEUR</span><span class="col-type">VARCHAR2(20)</span></div>
+          <div class="col-row"><span>POIDS</span><span class="col-type">NUMBER(8,2)</span></div>
+        </div>
+        <div class="schema-table">
+          <div class="table-header">LOTS_PRODUCTION</div>
+          <div class="col-row"><span class="pk">🔑 LOT_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span class="fk">🔗 CMD_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span class="fk">🔗 FLACON_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span>DATE_DEBUT</span><span class="col-type">DATE</span></div>
+          <div class="col-row"><span>FOUR_ID</span><span class="col-type">NUMBER(4)</span></div>
+          <div class="col-row"><span>QTE_PRODUITE</span><span class="col-type">NUMBER(8)</span></div>
+          <div class="col-row"><span>TAUX_CASSE</span><span class="col-type">NUMBER(5,2)</span></div>
+        </div>
+        <div class="schema-table">
+          <div class="table-header">CONTROLE_QUALITE</div>
+          <div class="col-row"><span class="pk">🔑 CQ_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span class="fk">🔗 LOT_ID</span><span class="col-type">NUMBER(10)</span></div>
+          <div class="col-row"><span>DATE_CTRL</span><span class="col-type">DATE</span></div>
+          <div class="col-row"><span>RESULTAT</span><span class="col-type">VARCHAR2(10)</span></div>
+          <div class="col-row"><span>NB_DEFAUTS</span><span class="col-type">NUMBER(6)</span></div>
+        </div>
+      </div>
+      <div class="tip">Les relations : un CLIENT a plusieurs COMMANDES → chaque COMMANDE génère un ou plusieurs LOTS → chaque LOT a un CONTRÔLE QUALITÉ.</div>
+    </div>
+
+  </div>
+
+  <!-- ===================== DELPHI ===================== -->
+  <div class="tab-content" id="tab-delphi">
+
+    <div class="card">
+      <h2>⚡ Structure d'une application Delphi</h2>
+      <p>Delphi (Object Pascal) est un langage orienté objet basé sur Pascal. Tout tourne autour des <strong style="color:#c8a050">Forms</strong> (fenêtres) et des <strong style="color:#c8a050">composants visuels</strong>.</p>
+
+      <h3>Fichiers clés d'un projet</h3>
+      <div class="code-block">
+        <div class="lang-label">structure projet delphi</div>
+MonProjet.dproj       <span class="cm">// Fichier projet principal</span>
+MonProjet.dpr         <span class="cm">// Programme principal</span>
+frmPrincipal.pas      <span class="cm">// Code de la fenêtre principale</span>
+frmPrincipal.dfm      <span class="cm">// Définition visuelle (composants)</span>
+dmDatabase.pas        <span class="cm">// DataModule (accès données)</span>
+uCommande.pas         <span class="cm">// Unité métier (classe TCommande)</span>
+      </div>
+
+      <h3>Le fichier .dpr — point d'entrée</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+        <div class="lang-label">object pascal — .dpr</div>
+<span class="kw">program</span> <span class="id">GlassTrack</span>;
+
+<span class="kw">uses</span>
+  Vcl.Forms,
+  frmPrincipal <span class="kw">in</span> <span class="st">'frmPrincipal.pas'</span> {frmMain},
+  dmDatabase   <span class="kw">in</span> <span class="st">'dmDatabase.pas'</span>  {DataModule1: TDataModule};
+
+{$R *.res}
+
+<span class="kw">begin</span>
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TDataModule1, DataModule1);  <span class="cm">// DataModule en 1er !</span>
+  Application.CreateForm(TfrmMain, frmMain);
+  Application.Run;
+<span class="kw">end</span>.
+      </div>
+
+      <h3>Une Form — structure typique</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+        <div class="lang-label">object pascal — frmCommandes.pas</div>
+<span class="kw">unit</span> <span class="id">frmCommandes</span>;
+
+<span class="kw">interface</span>
+
+<span class="kw">uses</span>
+  Winapi.Windows, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls,
+  Vcl.DBGrids, Data.DB, FireDAC.Comp.Client;
+
+<span class="kw">type</span>
+  <span class="ty">TfrmCommandes</span> = <span class="kw">class</span>(<span class="ty">TForm</span>)
+    <span class="cm">// Composants déclarés ici (glisser-déposer dans l'IDE)</span>
+    DBGrid1:   TDBGrid;        <span class="cm">// Grille liée aux données</span>
+    btnAjouter: TButton;
+    btnSupprimer: TButton;
+    edtRecherche: TEdit;
+    lblStatut: TLabel;
+
+    <span class="cm">// Gestionnaires d'événements (générés par l'IDE)</span>
+    <span class="kw">procedure</span> <span class="fn">btnAjouterClick</span>(Sender: TObject);
+    <span class="kw">procedure</span> <span class="fn">btnSupprimerClick</span>(Sender: TObject);
+    <span class="kw">procedure</span> <span class="fn">FormCreate</span>(Sender: TObject);
+    <span class="kw">procedure</span> <span class="fn">edtRechercheChange</span>(Sender: TObject);
+  <span class="kw">private</span>
+    FCommandeID: Integer;      <span class="cm">// Variables internes</span>
+    <span class="kw">procedure</span> <span class="fn">ChargerCommandes</span>;
+    <span class="kw">procedure</span> <span class="fn">ValiderSaisie</span>;
+  <span class="kw">public</span>
+    <span class="kw">property</span> CommandeID: Integer <span class="kw">read</span> FCommandeID;
+  <span class="kw">end</span>;
+
+<span class="kw">var</span>
+  frmCommandes: TfrmCommandes;
+
+<span class="kw">implementation</span>
+
+{$R *.dfm}   <span class="cm">// Lie le fichier visuel .dfm</span>
+
+<span class="kw">procedure</span> <span class="ty">TfrmCommandes</span>.<span class="fn">FormCreate</span>(Sender: TObject);
+<span class="kw">begin</span>
+  ChargerCommandes;
+  lblStatut.Caption := <span class="st">'Prêt'</span>;
+<span class="kw">end</span>;
+
+<span class="kw">procedure</span> <span class="ty">TfrmCommandes</span>.<span class="fn">btnAjouterClick</span>(Sender: TObject);
+<span class="kw">begin</span>
+  <span class="kw">if</span> <span class="kw">not</span> ValiderSaisie <span class="kw">then Exit</span>;
+  
+  DataModule1.qryCommandes.Append;  <span class="cm">// Nouvelle ligne</span>
+  DataModule1.qryCommandes.FieldByName(<span class="st">'STATUT'</span>).AsString := <span class="st">'EN_COURS'</span>;
+  DataModule1.qryCommandes.FieldByName(<span class="st">'DATE_CMD'</span>).AsDateTime := Now;
+  DataModule1.qryCommandes.Post;    <span class="cm">// Valide en mémoire</span>
+  DataModule1.ApplyUpdates;         <span class="cm">// Envoie à Oracle</span>
+<span class="kw">end</span>;
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>🔑 Concepts clés Object Pascal</h2>
+        <h3>Types fondamentaux</h3>
+        <div class="code-block" style="font-size:0.78rem;">
+<span class="cm">// Scalaires</span>
+<span class="kw">var</span>
+  n: <span class="ty">Integer</span>;      <span class="cm">// 32 bits</span>
+  d: <span class="ty">Double</span>;       <span class="cm">// flottant</span>
+  s: <span class="ty">String</span>;       <span class="cm">// chaîne Unicode</span>
+  b: <span class="ty">Boolean</span>;      <span class="cm">// True/False</span>
+  dt: <span class="ty">TDateTime</span>;   <span class="cm">// date+heure</span>
+
+<span class="cm">// Tableaux</span>
+<span class="kw">var</span>
+  arr: <span class="kw">array of</span> <span class="ty">String</span>;
+<span class="kw">begin</span>
+  SetLength(arr, <span class="nb">5</span>);
+  arr[<span class="nb">0</span>] := <span class="st">'Flacon 75cl'</span>;
+<span class="kw">end</span>;
+        </div>
+
+        <h3>Exceptions</h3>
+        <div class="code-block" style="font-size:0.78rem;">
+<span class="kw">try</span>
+  DataModule1.Connexion.StartTransaction;
+  <span class="cm">// ... opérations Oracle ...</span>
+  DataModule1.Connexion.Commit;
+<span class="kw">except</span>
+  <span class="kw">on</span> E: <span class="ty">EFDException</span> <span class="kw">do</span>
+  <span class="kw">begin</span>
+    DataModule1.Connexion.Rollback;
+    ShowMessage(<span class="st">'Erreur Oracle: '</span> + E.Message);
+  <span class="kw">end</span>;
+<span class="kw">end</span>;
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🏗️ Classes & Héritage</h2>
+        <div class="code-block" style="font-size:0.78rem;">
+<span class="kw">type</span>
+  <span class="cm">// Classe de base</span>
+  <span class="ty">TArticle</span> = <span class="kw">class</span>
+  <span class="kw">private</span>
+    FId: Integer;
+    FRef: String;
+  <span class="kw">public</span>
+    <span class="kw">constructor</span> <span class="fn">Create</span>(aId: Integer);
+    <span class="kw">destructor</span> <span class="fn">Destroy</span>; <span class="kw">override</span>;
+    <span class="kw">function</span> <span class="fn">ToString</span>: String; <span class="kw">virtual</span>;
+    <span class="kw">property</span> Id: Integer <span class="kw">read</span> FId;
+    <span class="kw">property</span> Reference: String
+      <span class="kw">read</span> FRef <span class="kw">write</span> FRef;
+  <span class="kw">end</span>;
+
+  <span class="cm">// Classe dérivée</span>
+  <span class="ty">TFlacon</span> = <span class="kw">class</span>(<span class="ty">TArticle</span>)
+  <span class="kw">private</span>
+    FContenance: Double;
+    FCouleur: String;
+  <span class="kw">public</span>
+    <span class="kw">function</span> <span class="fn">ToString</span>: String; <span class="kw">override</span>;
+    <span class="kw">property</span> Contenance: Double
+      <span class="kw">read</span> FContenance <span class="kw">write</span> FContenance;
+  <span class="kw">end</span>;
+
+<span class="kw">implementation</span>
+
+<span class="kw">constructor</span> <span class="ty">TArticle</span>.<span class="fn">Create</span>(aId: Integer);
+<span class="kw">begin</span>
+  <span class="kw">inherited</span> Create;
+  FId := aId;
+<span class="kw">end</span>;
+
+<span class="kw">function</span> <span class="ty">TFlacon</span>.<span class="fn">ToString</span>: String;
+<span class="kw">begin</span>
+  Result := Format(<span class="st">'Flacon %s - %.0fcl'</span>,
+    [Reference, FContenance]);
+<span class="kw">end</span>;
+        </div>
+        <div class="tip">En Delphi, il faut toujours libérer les objets créés avec <strong>Free</strong> — pas de garbage collector !</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== ORACLE ===================== -->
+  <div class="tab-content" id="tab-oracle">
+
+    <div class="card">
+      <h2>🗄️ Création des tables Oracle</h2>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+        <div class="lang-label">sql — oracle ddl</div>
+<span class="cm">-- Séquence pour les IDs (Oracle &lt; 12c)</span>
+<span class="sq">CREATE SEQUENCE</span> <span class="col">SEQ_COMMANDE</span>
+  START WITH <span class="nb">1</span> INCREMENT BY <span class="nb">1</span> NOCACHE NOCYCLE;
+
+<span class="sq">CREATE TABLE</span> <span class="col">CLIENTS</span> (
+  <span class="col">CLIENT_ID</span>  NUMBER(<span class="nb">10</span>)    <span class="sq">GENERATED ALWAYS AS IDENTITY</span>,  <span class="cm">-- Oracle 12c+</span>
+  <span class="col">NOM</span>        VARCHAR2(<span class="nb">100</span>)  <span class="sq">NOT NULL</span>,
+  <span class="col">PAYS</span>       VARCHAR2(<span class="nb">50</span>),
+  <span class="col">SEGMENT</span>    VARCHAR2(<span class="nb">20</span>)   <span class="sq">CHECK</span> (<span class="col">SEGMENT</span> IN (<span class="st">'LUXE'</span>,<span class="st">'PREMIUM'</span>,<span class="st">'STANDARD'</span>)),
+  <span class="sq">CONSTRAINT</span> <span class="col">PK_CLIENT</span> <span class="sq">PRIMARY KEY</span> (<span class="col">CLIENT_ID</span>)
+);
+
+<span class="sq">CREATE TABLE</span> <span class="col">COMMANDES</span> (
+  <span class="col">CMD_ID</span>     NUMBER(<span class="nb">10</span>)    <span class="sq">PRIMARY KEY</span>,
+  <span class="col">CLIENT_ID</span>  NUMBER(<span class="nb">10</span>)    <span class="sq">NOT NULL</span>,
+  <span class="col">DATE_CMD</span>   DATE          <span class="sq">DEFAULT SYSDATE NOT NULL</span>,
+  <span class="col">STATUT</span>     VARCHAR2(<span class="nb">20</span>)  <span class="sq">DEFAULT</span> <span class="st">'EN_ATTENTE'</span>,
+  <span class="col">QUANTITE</span>   NUMBER(<span class="nb">8</span>)    <span class="sq">NOT NULL</span>,
+  <span class="sq">CONSTRAINT</span> <span class="col">FK_CMD_CLIENT</span>
+    <span class="sq">FOREIGN KEY</span> (<span class="col">CLIENT_ID</span>) <span class="sq">REFERENCES</span> <span class="col">CLIENTS</span>(<span class="col">CLIENT_ID</span>),
+  <span class="sq">CONSTRAINT</span> <span class="col">CHK_STATUT</span>
+    <span class="sq">CHECK</span> (<span class="col">STATUT</span> IN (<span class="st">'EN_ATTENTE'</span>,<span class="st">'EN_COURS'</span>,<span class="st">'LIVREE'</span>,<span class="st">'ANNULEE'</span>))
+);
+
+<span class="cm">-- Trigger pour auto-incrément (style Oracle classique)</span>
+<span class="sq">CREATE OR REPLACE TRIGGER</span> <span class="col">TRG_COMMANDE_ID</span>
+<span class="sq">BEFORE INSERT ON</span> <span class="col">COMMANDES</span>
+<span class="sq">FOR EACH ROW</span>
+<span class="sq">BEGIN</span>
+  <span class="sq">IF</span> :NEW.<span class="col">CMD_ID</span> <span class="sq">IS NULL THEN</span>
+    :NEW.<span class="col">CMD_ID</span> := SEQ_COMMANDE.NEXTVAL;
+  <span class="sq">END IF</span>;
+<span class="sq">END</span>;
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📦 Package PL/SQL — Métier Production</h2>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+        <div class="lang-label">pl/sql — package</div>
+<span class="sq">CREATE OR REPLACE PACKAGE</span> <span class="col">PKG_PRODUCTION</span> <span class="sq">AS</span>
+
+  <span class="cm">-- Crée un lot de production, retourne l'ID</span>
+  <span class="sq">FUNCTION</span>  <span class="col">CREER_LOT</span>(
+    p_cmd_id    NUMBER,
+    p_flacon_id NUMBER,
+    p_four_id   NUMBER
+  ) <span class="sq">RETURN NUMBER</span>;
+
+  <span class="cm">-- Met à jour le résultat du contrôle qualité</span>
+  <span class="sq">PROCEDURE</span> <span class="col">VALIDER_QUALITE</span>(
+    p_lot_id    NUMBER,
+    p_resultat  VARCHAR2,
+    p_defauts   NUMBER <span class="sq">DEFAULT</span> <span class="nb">0</span>
+  );
+
+  <span class="cm">-- Calcule le taux de casse moyen d'un four</span>
+  <span class="sq">FUNCTION</span>  <span class="col">TAUX_CASSE_FOUR</span>(p_four_id NUMBER)
+    <span class="sq">RETURN NUMBER</span>;
+
+<span class="sq">END</span> <span class="col">PKG_PRODUCTION</span>;
+/
+
+<span class="sq">CREATE OR REPLACE PACKAGE BODY</span> <span class="col">PKG_PRODUCTION</span> <span class="sq">AS</span>
+
+  <span class="sq">FUNCTION</span> <span class="col">CREER_LOT</span>(p_cmd_id NUMBER, p_flacon_id NUMBER, p_four_id NUMBER)
+    <span class="sq">RETURN NUMBER IS</span>
+    v_lot_id NUMBER;
+  <span class="sq">BEGIN</span>
+    <span class="sq">INSERT INTO</span> <span class="col">LOTS_PRODUCTION</span>
+      (<span class="col">CMD_ID</span>, <span class="col">FLACON_ID</span>, <span class="col">FOUR_ID</span>, <span class="col">DATE_DEBUT</span>)
+    <span class="sq">VALUES</span>
+      (p_cmd_id, p_flacon_id, p_four_id, SYSDATE)
+    <span class="sq">RETURNING</span> <span class="col">LOT_ID</span> <span class="sq">INTO</span> v_lot_id;
+
+    <span class="sq">COMMIT</span>;
+    <span class="sq">RETURN</span> v_lot_id;
+  <span class="sq">EXCEPTION</span>
+    <span class="sq">WHEN OTHERS THEN</span>
+      <span class="sq">ROLLBACK</span>;
+      RAISE_APPLICATION_ERROR(-<span class="nb">20001</span>,
+        <span class="st">'Erreur création lot: '</span> || SQLERRM);
+  <span class="sq">END</span>;
+
+  <span class="sq">FUNCTION</span> <span class="col">TAUX_CASSE_FOUR</span>(p_four_id NUMBER) <span class="sq">RETURN NUMBER IS</span>
+    v_taux NUMBER;
+  <span class="sq">BEGIN</span>
+    <span class="sq">SELECT</span> AVG(<span class="col">TAUX_CASSE</span>)
+    <span class="sq">INTO</span>   v_taux
+    <span class="sq">FROM</span>   <span class="col">LOTS_PRODUCTION</span>
+    <span class="sq">WHERE</span>  <span class="col">FOUR_ID</span> = p_four_id
+    <span class="sq">AND</span>    <span class="col">DATE_DEBUT</span> >= ADD_MONTHS(SYSDATE, -<span class="nb">3</span>);
+
+    <span class="sq">RETURN</span> NVL(v_taux, <span class="nb">0</span>);
+  <span class="sq">END</span>;
+
+<span class="sq">END</span> <span class="col">PKG_PRODUCTION</span>;
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔍 Requêtes métier importantes</h2>
+      <div class="grid2">
+        <div>
+          <h3>Commandes en retard</h3>
+          <div class="code-block" style="font-size:0.78rem;">
+<span class="sq">SELECT</span> c.<span class="col">CMD_ID</span>,
+       cl.<span class="col">NOM</span> <span class="sq">AS</span> CLIENT,
+       c.<span class="col">DATE_CMD</span>,
+       c.<span class="col">QUANTITE</span>,
+       c.<span class="col">STATUT</span>
+<span class="sq">FROM</span>   <span class="col">COMMANDES</span>    c
+<span class="sq">JOIN</span>   <span class="col">CLIENTS</span>      cl
+  <span class="sq">ON</span>   cl.<span class="col">CLIENT_ID</span> = c.<span class="col">CLIENT_ID</span>
+<span class="sq">WHERE</span>  c.<span class="col">STATUT</span> <span class="sq">IN</span> (<span class="st">'EN_ATTENTE'</span>,<span class="st">'EN_COURS'</span>)
+<span class="sq">AND</span>    c.<span class="col">DATE_CMD</span> &lt; SYSDATE - <span class="nb">30</span>
+<span class="sq">ORDER BY</span> c.<span class="col">DATE_CMD</span>;
+          </div>
+        </div>
+        <div>
+          <h3>Tableau de bord production</h3>
+          <div class="code-block" style="font-size:0.78rem;">
+<span class="sq">SELECT</span>
+  f.<span class="col">FOUR_ID</span>,
+  COUNT(*) <span class="sq">AS</span> NB_LOTS,
+  SUM(<span class="col">QTE_PRODUITE</span>) <span class="sq">AS</span> TOTAL,
+  ROUND(AVG(<span class="col">TAUX_CASSE</span>),<span class="nb">2</span>) <span class="sq">AS</span> CASSE_MOY,
+  SUM(<span class="sq">CASE WHEN</span> cq.<span class="col">RESULTAT</span>=<span class="st">'OK'</span>
+       <span class="sq">THEN</span> <span class="nb">1</span> <span class="sq">ELSE</span> <span class="nb">0</span> <span class="sq">END</span>
+  ) <span class="sq">AS</span> LOTS_OK
+<span class="sq">FROM</span>  <span class="col">LOTS_PRODUCTION</span> f
+<span class="sq">LEFT JOIN</span> <span class="col">CONTROLE_QUALITE</span> cq
+  <span class="sq">ON</span> cq.<span class="col">LOT_ID</span> = f.<span class="col">LOT_ID</span>
+<span class="sq">WHERE</span> TRUNC(f.<span class="col">DATE_DEBUT</span>,'MM')
+    = TRUNC(SYSDATE,'MM')
+<span class="sq">GROUP BY</span> f.<span class="col">FOUR_ID</span>
+<span class="sq">ORDER BY</span> TOTAL <span class="sq">DESC</span>;
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== PERSISTANCE ===================== -->
+  <div class="tab-content" id="tab-persistance">
+
+    <div class="card">
+      <h2>💾 DataModule — Le cœur de la persistance</h2>
+      <p>En Delphi, le <strong style="color:#c8a050">TDataModule</strong> est une form invisible qui regroupe tous les composants d'accès aux données. C'est le pattern DAL standard de Delphi.</p>
+
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+        <div class="lang-label">object pascal — dmDatabase.pas (DataModule)</div>
+<span class="kw">unit</span> <span class="id">dmDatabase</span>;
+
+<span class="kw">interface</span>
+
+<span class="kw">uses</span>
+  System.SysUtils, System.Classes,
+  FireDAC.Comp.Client,   <span class="cm">// TFDConnection, TFDQuery</span>
+  FireDAC.Stan.Param,    <span class="cm">// TFDParam</span>
+  FireDAC.Phys.OracleDef,<span class="cm">// Driver Oracle</span>
+  Data.DB;               <span class="cm">// TDataSet, TField</span>
+
+<span class="kw">type</span>
+  <span class="ty">TDataModule1</span> = <span class="kw">class</span>(<span class="ty">TDataModule</span>)
+    <span class="cm">// Composants posés dans l'IDE</span>
+    FDConnection1:  TFDConnection;   <span class="cm">// Connexion Oracle</span>
+    qryCommandes:   TFDQuery;        <span class="cm">// SELECT sur COMMANDES</span>
+    qryLots:        TFDQuery;        <span class="cm">// SELECT sur LOTS_PRODUCTION</span>
+    dsCommandes:    TDataSource;     <span class="cm">// Lien Query → Grid</span>
+    FDTransaction1: TFDTransaction;  <span class="cm">// Gestion transactions</span>
+
+    <span class="kw">procedure</span> <span class="fn">DataModuleCreate</span>(Sender: TObject);
+    <span class="kw">procedure</span> <span class="fn">DataModuleDestroy</span>(Sender: TObject);
+  <span class="kw">private</span>
+    <span class="kw">procedure</span> <span class="fn">ConfigurerConnexion</span>;
+  <span class="kw">public</span>
+    <span class="kw">procedure</span> <span class="fn">ApplyUpdates</span>;
+    <span class="kw">function</span>  <span class="fn">ExecuterProcedure</span>(
+      const aProcedure: String;
+      const aParams: <span class="kw">array of</span> Variant
+    ): Variant;
+  <span class="kw">end</span>;
+
+<span class="kw">var</span>
+  DataModule1: TDataModule1;
+
+<span class="kw">implementation</span>
+
+{$R *.dfm}
+
+<span class="kw">procedure</span> <span class="ty">TDataModule1</span>.<span class="fn">DataModuleCreate</span>(Sender: TObject);
+<span class="kw">begin</span>
+  ConfigurerConnexion;
+  
+  <span class="cm">// Configuration de la query principale</span>
+  qryCommandes.Connection := FDConnection1;
+  qryCommandes.SQL.Text :=
+    <span class="st">'SELECT c.CMD_ID, c.DATE_CMD, c.STATUT, c.QUANTITE, '</span> +
+    <span class="st">'       cl.NOM AS CLIENT_NOM '</span> +
+    <span class="st">'FROM   COMMANDES c '</span> +
+    <span class="st">'JOIN   CLIENTS cl ON cl.CLIENT_ID = c.CLIENT_ID '</span> +
+    <span class="st">'WHERE  (:statut IS NULL OR c.STATUT = :statut) '</span> +
+    <span class="st">'ORDER BY c.DATE_CMD DESC'</span>;
+  
+  qryCommandes.ParamByName(<span class="st">'statut'</span>).Clear; <span class="cm">// = tous</span>
+  qryCommandes.Open;
+  
+  dsCommandes.DataSet := qryCommandes;
+<span class="kw">end</span>;
+
+<span class="kw">procedure</span> <span class="ty">TDataModule1</span>.<span class="fn">ConfigurerConnexion</span>;
+<span class="kw">begin</span>
+  <span class="kw">with</span> FDConnection1 <span class="kw">do begin</span>
+    DriverName := <span class="st">'Oracle'</span>;
+    Params.Clear;
+    Params.Add(<span class="st">'DriverID=Oracle'</span>);
+    Params.Add(<span class="st">'Server=SAVERGLASS_DB'</span>);   <span class="cm">// TNS alias</span>
+    Params.Add(<span class="st">'Database=ORCL'</span>);
+    Params.Add(<span class="st">'User_Name=GLASSTRACK'</span>);
+    Params.Add(<span class="st">'Password=xxxx'</span>);
+    Params.Add(<span class="st">'CharacterSet=AL32UTF8'</span>);
+    LoginPrompt := False;
+    Connected := True;
+  <span class="kw">end</span>;
+<span class="kw">end</span>;
+
+<span class="cm">// Appel d'une procédure/fonction PL/SQL</span>
+<span class="kw">function</span> <span class="ty">TDataModule1</span>.<span class="fn">ExecuterProcedure</span>(
+  const aProcedure: String;
+  const aParams: <span class="kw">array of</span> Variant
+): Variant;
+<span class="kw">var</span>
+  qry: TFDQuery;
+  i: Integer;
+<span class="kw">begin</span>
+  qry := TFDQuery.Create(nil);
+  <span class="kw">try</span>
+    qry.Connection := FDConnection1;
+    qry.SQL.Text := <span class="st">'BEGIN :result := '</span> + aProcedure + <span class="st">'('</span>;
+    <span class="kw">for</span> i := <span class="nb">0</span> <span class="kw">to</span> High(aParams) <span class="kw">do</span>
+      qry.SQL.Add(<span class="st">':p'</span> + IntToStr(i) + <span class="kw">if</span> i&lt;High(aParams) <span class="kw">then</span> <span class="st">','</span> <span class="kw">else</span> <span class="st">''</span>);
+    qry.SQL.Add(<span class="st">'); END;'</span>);
+    qry.Params[<span class="nb">0</span>].ParamType := ptOutput;
+    <span class="kw">for</span> i := <span class="nb">1</span> <span class="kw">to</span> Length(aParams) <span class="kw">do</span>
+      qry.Params[i].Value := aParams[i-<span class="nb">1</span>];
+    qry.ExecSQL;
+    Result := qry.Params[<span class="nb">0</span>].Value;
+  <span class="kw">finally</span>
+    qry.Free;
+  <span class="kw">end</span>;
+<span class="kw">end</span>;
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔄 Pattern CRUD complet</h2>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+        <div class="lang-label">object pascal — uCommandeDAO.pas</div>
+<span class="kw">unit</span> <span class="id">uCommandeDAO</span>;
+<span class="cm">// DAO = Data Access Object — séparation logique métier / accès données</span>
+
+<span class="kw">type</span>
+  <span class="ty">TCommandeDAO</span> = <span class="kw">class</span>
+  <span class="kw">private</span>
+    FConn: TFDConnection;
+  <span class="kw">public</span>
+    <span class="kw">constructor</span> <span class="fn">Create</span>(aConn: TFDConnection);
+
+    <span class="cm">// READ — retourne toutes les commandes filtrées</span>
+    <span class="kw">function</span> <span class="fn">GetAll</span>(aStatut: String = <span class="st">''</span>): TFDQuery;
+
+    <span class="cm">// CREATE</span>
+    <span class="kw">function</span> <span class="fn">Inserer</span>(
+      aClientID: Integer;
+      aQuantite: Integer
+    ): Integer;  <span class="cm">// retourne le nouvel ID</span>
+
+    <span class="cm">// UPDATE</span>
+    <span class="kw">procedure</span> <span class="fn">MAJStatut</span>(aCmdID: Integer; aStatut: String);
+
+    <span class="cm">// DELETE</span>
+    <span class="kw">procedure</span> <span class="fn">Supprimer</span>(aCmdID: Integer);
+  <span class="kw">end</span>;
+
+<span class="kw">function</span> <span class="ty">TCommandeDAO</span>.<span class="fn">Inserer</span>(aClientID, aQuantite: Integer): Integer;
+<span class="kw">var</span>
+  qry: TFDQuery;
+<span class="kw">begin</span>
+  qry := TFDQuery.Create(nil);
+  <span class="kw">try</span>
+    qry.Connection := FConn;
+    qry.SQL.Text :=
+      <span class="st">'INSERT INTO COMMANDES (CLIENT_ID, QUANTITE, STATUT) '</span> +
+      <span class="st">'VALUES (:cid, :qty, ''EN_ATTENTE'') '</span> +
+      <span class="st">'RETURNING CMD_ID INTO :newid'</span>;  <span class="cm">// RETURNING = astuce Oracle</span>
+
+    qry.ParamByName(<span class="st">'cid'</span>).AsInteger  := aClientID;
+    qry.ParamByName(<span class="st">'qty'</span>).AsInteger  := aQuantite;
+    qry.ParamByName(<span class="st">'newid'</span>).ParamType := ptOutput;
+    qry.ParamByName(<span class="st">'newid'</span>).DataType  := ftInteger;
+
+    qry.ExecSQL;
+    Result := qry.ParamByName(<span class="st">'newid'</span>).AsInteger;
+  <span class="kw">finally</span>
+    qry.Free;
+  <span class="kw">end</span>;
+<span class="kw">end</span>;
+
+<span class="kw">procedure</span> <span class="ty">TCommandeDAO</span>.<span class="fn">MAJStatut</span>(aCmdID: Integer; aStatut: String);
+<span class="kw">var</span> qry: TFDQuery;
+<span class="kw">begin</span>
+  qry := TFDQuery.Create(nil);
+  <span class="kw">try</span>
+    qry.Connection := FConn;
+    qry.SQL.Text :=
+      <span class="st">'UPDATE COMMANDES SET STATUT = :st WHERE CMD_ID = :id'</span>;
+    qry.ParamByName(<span class="st">'st'</span>).AsString  := aStatut;
+    qry.ParamByName(<span class="st">'id'</span>).AsInteger := aCmdID;
+    qry.ExecSQL;
+  <span class="kw">finally</span>
+    qry.Free;
+  <span class="kw">end</span>;
+<span class="kw">end</span>;
+      </div>
+
+      <div class="tip">Toujours utiliser des <strong>paramètres liés</strong> (:param) et jamais concaténer des valeurs dans le SQL — protection contre les injections SQL et meilleures performances (plan de requête réutilisé par Oracle).</div>
+    </div>
+
+    <div class="card">
+      <h2>🔗 Composants de liaison données → UI</h2>
+      <div class="grid2">
+        <div>
+          <h3>TDataSource — le médiateur</h3>
+          <p style="font-size:0.85rem;color:#8aaccc;margin-bottom:0.5rem;">Le TDataSource fait le pont entre un TDataSet (query) et les composants visuels DB-aware :</p>
+          <div class="code-block" style="font-size:0.78rem;">
+<span class="cm">// Dans le DataModule :</span>
+dsCommandes.DataSet := qryCommandes;
+
+<span class="cm">// Dans la Form (côté UI) :</span>
+DBGrid1.DataSource := DataModule1.dsCommandes;
+DBEdit1.DataSource := DataModule1.dsCommandes;
+DBEdit1.DataField  := <span class="st">'CLIENT_NOM'</span>;
+<span class="cm">// → DBEdit1 affiche/édite automatiquement</span>
+<span class="cm">//   le champ CLIENT_NOM de la ligne courante !</span>
+          </div>
+        </div>
+        <div>
+          <h3>Navigation dans un TDataSet</h3>
+          <div class="code-block" style="font-size:0.78rem;">
+<span class="kw">with</span> DataModule1.qryCommandes <span class="kw">do begin</span>
+  First;                    <span class="cm">// 1ère ligne</span>
+  Next;                     <span class="cm">// ligne suivante</span>
+  Prior;                    <span class="cm">// ligne précédente</span>
+  Last;                     <span class="cm">// dernière</span>
+  
+  <span class="cm">// Itérer toutes les lignes</span>
+  First;
+  <span class="kw">while not</span> EOF <span class="kw">do begin</span>
+    total += FieldByName(<span class="st">'QUANTITE'</span>).AsInteger;
+    Next;
+  <span class="kw">end</span>;
+
+  <span class="cm">// Lire un champ</span>
+  id  := FieldByName(<span class="st">'CMD_ID'</span>).AsInteger;
+  nom := FieldByName(<span class="st">'CLIENT_NOM'</span>).AsString;
+  dt  := FieldByName(<span class="st">'DATE_CMD'</span>).AsDateTime;
+<span class="kw">end</span>;
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== QUIZ ===================== -->
+  <div class="tab-content" id="tab-quiz">
+
+    <div class="card" style="border-left-color:var(--accent);">
+      <h2>🎯 Questions d'entretien — Testez-vous !</h2>
+      <p style="margin-bottom:1rem;">Questions typiques pour un poste Delphi/Oracle chez Saverglass.</p>
+
+      <div id="quiz-score" style="margin-bottom:1rem;font-size:0.85rem;color:#8aaccc;">
+        Score : <span id="score">0</span> / <span id="total">0</span>
+        <div class="progress-bar" style="margin-top:0.4rem;">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="quiz-q" id="q1">
+        <p>1. Qu'est-ce qu'un <code style="background:rgba(255,255,255,0.05);padding:0.1rem 0.4rem;border-radius:3px;">TDataModule</code> en Delphi ?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="answer(this,'wrong','q1')">Une fenêtre spéciale pour les données Oracle</button>
+          <button class="quiz-opt" onclick="answer(this,'correct','q1')">Un conteneur non-visuel regroupant composants d'accès aux données</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q1')">Un équivalent du DataSet dans .NET</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q1')">Le fichier .dfm de connexion à la base</button>
+        </div>
+        <div class="quiz-expl" id="expl-q1">
+          Le TDataModule est une <strong>form invisible</strong> qui regroupe les composants DAL : TFDConnection, TFDQuery, TDataSource… Il est instancié avant toutes les forms dans le .dpr et partagé dans toute l'application via la variable globale <code>DataModule1</code>.
+        </div>
+      </div>
+
+      <div class="quiz-q" id="q2">
+        <p>2. Quelle est la différence entre <code>.Post</code> et <code>.ApplyUpdates</code> en FireDAC ?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="answer(this,'wrong','q2')">Aucune différence, c'est la même opération</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q2')">Post écrit en base, ApplyUpdates valide en mémoire</button>
+          <button class="quiz-opt" onclick="answer(this,'correct','q2')">Post valide en mémoire locale, ApplyUpdates envoie les modifications à la base Oracle</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q2')">ApplyUpdates fait un COMMIT Oracle implicite</button>
+        </div>
+        <div class="quiz-expl" id="expl-q2">
+          <strong>Post</strong> valide l'enregistrement dans le buffer local du TDataSet (passage de dsEdit/dsInsert à dsBrowse). <strong>ApplyUpdates</strong> envoie les modifications bufférisées vers Oracle via des INSERT/UPDATE/DELETE générés automatiquement. Le COMMIT Oracle reste explicite ou géré par la TFDTransaction.
+        </div>
+      </div>
+
+      <div class="quiz-q" id="q3">
+        <p>3. Pourquoi utilise-t-on des paramètres liés (<code>:parametre</code>) au lieu de concaténer du SQL ?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="answer(this,'wrong','q3')">C'est une obligation technique d'Oracle</button>
+          <button class="quiz-opt" onclick="answer(this,'correct','q3')">Sécurité (SQL injection) + performance (réutilisation du plan d'exécution Oracle)</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q3')">Pour la compatibilité avec tous les drivers de base</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q3')">Les paramètres gèrent automatiquement les transactions</button>
+        </div>
+        <div class="quiz-expl" id="expl-q3">
+          Double avantage : <strong>Sécurité</strong> — les paramètres sont typés et échappés, impossible d'injecter du SQL. <strong>Performance</strong> — Oracle parse et stocke le plan d'exécution la 1ère fois, les appels suivants réutilisent ce plan (soft parse vs hard parse). C'est crucial pour un ERP industriel avec des milliers d'appels/heure.
+        </div>
+      </div>
+
+      <div class="quiz-q" id="q4">
+        <p>4. Dans Oracle, qu'est-ce qu'une séquence (<code>SEQUENCE</code>) ?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="answer(this,'wrong','q4')">Un index unique sur une colonne</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q4')">Un type de contrainte d'unicité</button>
+          <button class="quiz-opt" onclick="answer(this,'correct','q4')">Un objet générant des entiers uniques et auto-incrémentés indépendamment des tables</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q4')">Le résultat d'un ORDER BY</button>
+        </div>
+        <div class="quiz-expl" id="expl-q4">
+          Une SEQUENCE Oracle est un objet indépendant qui génère des valeurs numériques uniques (<code>SEQ.NEXTVAL</code>). Contrairement à l'IDENTITY de SQL Server, elle est indépendante de toute table — plusieurs tables peuvent partager une même séquence. Utilisée classiquement dans un TRIGGER BEFORE INSERT pour simuler l'auto-incrément.
+        </div>
+      </div>
+
+      <div class="quiz-q" id="q5">
+        <p>5. Quel composant Delphi fait le lien entre un TFDQuery et un TDBGrid ?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="answer(this,'wrong','q5')">TFDConnection</button>
+          <button class="quiz-opt" onclick="answer(this,'correct','q5')">TDataSource</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q5')">TBindSource</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q5')">TDBNavigator</button>
+        </div>
+        <div class="quiz-expl" id="expl-q5">
+          Le <strong>TDataSource</strong> est le médiateur indispensable : <code>TFDQuery → TDataSource → TDBGrid/TDBEdit/TDBLabel…</code>. Quand le curseur se déplace dans la query, tous les composants DB-aware liés au même TDataSource se mettent à jour automatiquement. C'est le pattern <em>Observer</em> de Delphi.
+        </div>
+      </div>
+
+      <div class="quiz-q" id="q6">
+        <p>6. Qu'est-ce que <code>RETURNING ... INTO</code> en Oracle SQL ?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="answer(this,'wrong','q6')">Une clause pour afficher le résultat d'un SELECT</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q6')">Un synonyme de OUTPUT dans SQL Server</button>
+          <button class="quiz-opt" onclick="answer(this,'correct','q6')">Une clause qui retourne la valeur d'une colonne après INSERT/UPDATE sans SELECT supplémentaire</button>
+          <button class="quiz-opt" onclick="answer(this,'wrong','q6')">Une façon d'appeler une fonction PL/SQL depuis SQL</button>
+        </div>
+        <div class="quiz-expl" id="expl-q6">
+          <code>INSERT INTO ... RETURNING COL INTO :var</code> permet de récupérer l'ID généré (via trigger/séquence) immédiatement après l'insertion, <strong>sans faire un SELECT MAX() ou CURRVAL</strong> ensuite — ce qui serait dangereux en accès concurrent. Très utilisé en Delphi avec FireDAC : <code>qry.ParamByName('newid').ParamType := ptOutput</code>.
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===================== CHEAT SHEET ===================== -->
+  <div class="tab-content" id="tab-cheat">
+
+    <div class="grid2">
+
+      <div class="card">
+        <h2>⚡ Delphi — Mémo rapide</h2>
+
+        <h3>Événements courants</h3>
+        <div style="margin:0.5rem 0;">
+          <span class="chip">OnClick</span><span class="chip">OnChange</span><span class="chip">OnKeyDown</span>
+          <span class="chip">OnCreate</span><span class="chip">OnDestroy</span><span class="chip">OnClose</span>
+          <span class="chip">OnShow</span><span class="chip">OnDblClick</span><span class="chip">OnEnter</span>
+        </div>
+
+        <h3>Composants visuels clés</h3>
+        <div style="margin:0.5rem 0;">
+          <span class="chip">TForm</span><span class="chip">TPanel</span><span class="chip">TPageControl</span>
+          <span class="chip">TDBGrid</span><span class="chip">TDBEdit</span><span class="chip">TDBComboBox</span>
+          <span class="chip">TButton</span><span class="chip">TLabel</span><span class="chip">TEdit</span>
+          <span class="chip">TListView</span><span class="chip">TTreeView</span><span class="chip">TStatusBar</span>
+        </div>
+
+        <h3>Composants FireDAC (données)</h3>
+        <div style="margin:0.5rem 0;">
+          <span class="chip">TFDConnection</span><span class="chip">TFDQuery</span><span class="chip">TFDTable</span>
+          <span class="chip">TFDTransaction</span><span class="chip">TFDStoredProc</span>
+          <span class="chip">TDataSource</span><span class="chip">TFDMemTable</span>
+        </div>
+
+        <h3>Raccourcis IDE (Delphi/RAD Studio)</h3>
+        <div class="code-block" style="font-size:0.78rem;">
+F9         <span class="cm">Compiler + Exécuter</span>
+Ctrl+F9    <span class="cm">Compiler seulement</span>
+F12        <span class="cm">Basculer Form ↔ Code</span>
+Ctrl+D     <span class="cm">Formater le code</span>
+Ctrl+Clic  <span class="cm">Aller à la déclaration</span>
+F2         <span class="cm">Renommer (refactoring)</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🗄️ Oracle — Fonctions essentielles</h2>
+
+        <div class="code-block" style="font-size:0.78rem;">
+<span class="cm">-- Dates</span>
+<span class="sq">SYSDATE</span>                      <span class="cm">-- date+heure système</span>
+<span class="fn">TRUNC</span>(date, <span class="st">'MM'</span>)           <span class="cm">-- 1er jour du mois</span>
+<span class="fn">ADD_MONTHS</span>(SYSDATE, -<span class="nb">3</span>)     <span class="cm">-- il y a 3 mois</span>
+<span class="fn">TO_CHAR</span>(dt, <span class="st">'DD/MM/YYYY'</span>)   <span class="cm">-- formatage</span>
+<span class="fn">TO_DATE</span>(<span class="st">'01/01/2024'</span>,<span class="st">'DD/MM/YYYY'</span>)
+
+<span class="cm">-- Chaînes</span>
+<span class="fn">UPPER</span>(<span class="col">NOM</span>)   <span class="fn">LOWER</span>   <span class="fn">TRIM</span>   <span class="fn">LENGTH</span>
+<span class="fn">SUBSTR</span>(<span class="col">NOM</span>, <span class="nb">1</span>, <span class="nb">3</span>)          <span class="cm">-- 3 premiers chars</span>
+<span class="fn">INSTR</span>(<span class="col">NOM</span>, <span class="st">'GL'</span>)            <span class="cm">-- position de 'GL'</span>
+
+<span class="cm">-- Nulls & Conditions</span>
+<span class="fn">NVL</span>(<span class="col">TAUX_CASSE</span>, <span class="nb">0</span>)         <span class="cm">-- remplace NULL par 0</span>
+<span class="fn">NVL2</span>(val, <span class="st">'oui'</span>, <span class="st">'non'</span>)    <span class="cm">-- si non-null/null</span>
+<span class="fn">COALESCE</span>(a, b, c)           <span class="cm">-- 1er non-null</span>
+<span class="fn">DECODE</span>(<span class="col">STATUT</span>,<span class="st">'OK'</span>,<span class="nb">1</span>,<span class="st">'KO'</span>,<span class="nb">0</span>,<span class="nb">-1</span>)
+
+<span class="cm">-- Agrégats</span>
+COUNT(*) SUM() AVG() MIN() MAX()
+<span class="fn">LISTAGG</span>(<span class="col">NOM</span>, <span class="st">', '</span>)          <span class="cm">-- concaténation groupée</span>
+
+<span class="cm">-- Analytiques (fenêtres)</span>
+<span class="fn">ROW_NUMBER</span>() <span class="sq">OVER</span> (<span class="sq">PARTITION BY</span> <span class="col">CLIENT_ID</span>
+             <span class="sq">ORDER BY</span> <span class="col">DATE_CMD</span> <span class="sq">DESC</span>)
+<span class="fn">RANK</span>() / <span class="fn">DENSE_RANK</span>()
+<span class="fn">LAG</span>(<span class="col">QTE</span>, <span class="nb">1</span>) <span class="sq">OVER</span> (...)       <span class="cm">-- valeur précédente</span>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column:1/-1;">
+        <h2>💬 Questions fréquentes en entretien — Réponses clés</h2>
+        <div class="grid2">
+          <div>
+            <h3>"Expliquez votre approche de la persistance en Delphi"</h3>
+            <p>"J'utilise un <strong>DataModule</strong> dédié comme couche DAL, avec des composants <strong>TFDQuery</strong> paramétrés. Pour la logique métier complexe, je délègue à des <strong>packages PL/SQL</strong> côté Oracle. Tous les accès passent par des paramètres liés pour la sécurité et la performance."</p>
+          </div>
+          <div>
+            <h3>"Comment gérez-vous les transactions ?"</h3>
+            <p>"Via <strong>TFDTransaction</strong> avec StartTransaction / Commit / Rollback dans un bloc try/except. Pour les opérations critiques (ex: créer un lot + mise à jour stock), je regroupe tout en une seule transaction Oracle pour garantir la cohérence ACID."</p>
+          </div>
+          <div>
+            <h3>"Différence TFDQuery vs TFDTable ?"</h3>
+            <p>"<strong>TFDTable</strong> mappe directement une table Oracle entière, rapide à configurer. <strong>TFDQuery</strong> est plus flexible : SQL personnalisé, jointures, filtres dynamiques. En production j'utilise surtout TFDQuery pour le contrôle et la performance."</p>
+          </div>
+          <div>
+            <h3>"Saverglass vous demande d'optimiser une requête lente ?"</h3>
+            <p>"Je commence par <strong>EXPLAIN PLAN</strong> pour voir le plan d'exécution. Je vérifie les index manquants, les full table scans inutiles. Je collabore avec le DBA Oracle pour créer les index adaptés et, si nécessaire, je réécris la logique en PL/SQL pour éviter les appels répétés depuis Delphi."</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Claude Code (interne, ne pas versionner)
+.claude/
+
+# Delphi
+*.dcu
+*.exe
+*.dll
+*.bpl
+*.dcp
+*.res
+__history/
+Win32/
+Win64/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
