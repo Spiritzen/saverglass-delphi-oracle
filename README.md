@@ -13,6 +13,14 @@
 
 [🚀 **Voir la démo**](https://Spiritzen.github.io/saverglass-delphi-oracle) · [📋 Cheat Sheet](#-cheat-sheet-rapide) · [🎯 Quiz](#-quiz-dentretien)
 
+---
+
+### 🖥️ Application GlassTrack en action
+
+![GlassTrack Demo](assets/demo.jpg)
+
+*Interface réelle — GlassTrack tournant sous Delphi 12, mode démonstration sans Oracle*
+
 </div>
 
 ---
@@ -35,14 +43,14 @@ La réponse : construire un **mini-projet complet et documenté** — `GlassTrac
 | `index.html` | Guide interactif complet (6 onglets, quiz, cheat sheet) |
 | `assets/css/style.css` | Design glassmorphism sombre, 100% custom |
 | `assets/js/app.js` | Navigation, quiz interactif, copie de code |
+| `assets/demo.jpg` | Screenshot de l'application GlassTrack en action |
 | `src/GlassTrack.dpr` | Point d'entrée de l'application Delphi |
 | `src/frmCommandes.pas` | Form UI — gestion des commandes clients |
 | `src/frmProduction.pas` | Form UI — suivi des lots de fabrication |
-| `src/uCommande.pas` | Couche métier — classe `TCommande` |
-| `src/uProduction.pas` | Couche métier — classe `TLotFabrication` |
+| `src/uModeles.pas` | Couche métier — classes `TCommande`, `TLotProduction` |
 | `src/dmDatabase.pas` | DataModule — connexion FireDAC + Oracle |
-| `src/dmCommandes.pas` | DataModule — composants données commandes |
 | `src/uCommandeDAO.pas` | Pattern DAO — CRUD commandes en base |
+| `src/uProductionDAO.pas` | Pattern DAO — CRUD lots et qualité |
 | `sql/schema.sql` | Création des tables, séquences, triggers |
 | `sql/packages.sql` | Package PL/SQL `PKG_PRODUCTION` |
 
@@ -56,20 +64,20 @@ La réponse : construire un **mini-projet complet et documenté** — `GlassTrac
 │                                                             │
 │   frmCommandes.pas          frmProduction.pas               │
 │   ┌──────────────────┐      ┌──────────────────┐            │
-│   │ TDBGrid          │      │ TListView         │            │
-│   │ TDBEdit          │      │ TProgressBar      │            │
-│   │ TDBNavigator     │      │ TChart            │            │
+│   │ TDBGrid          │      │ TDBLookupComboBox │            │
+│   │ TComboBox        │      │ TMemo (stats)     │            │
+│   │ TStatusBar       │      │ TStatusBar        │            │
 │   └──────────────────┘      └──────────────────┘            │
 └─────────────────────┬───────────────────────────────────────┘
                       │  Events / Handlers
 ┌─────────────────────▼───────────────────────────────────────┐
 │                   ⚙️  COUCHE MÉTIER (BLL)                    │
 │                                                             │
-│   uCommande.pas             uProduction.pas                 │
+│   uModeles.pas                                              │
 │   ┌──────────────────┐      ┌──────────────────┐            │
-│   │ TCommande        │      │ TLotFabrication   │            │
-│   │ TFlacon          │      │ TControleQualite  │            │
-│   │ Validation       │      │ Règles métier     │            │
+│   │ TCommande        │      │ TLotProduction    │            │
+│   │ TFlacon          │      │ TStatsFour        │            │
+│   │ EstModifiable()  │      │ EstEnAlerteCasse()│            │
 │   └──────────────────┘      └──────────────────┘            │
 └─────────────────────┬───────────────────────────────────────┘
                       │  DAO Calls
@@ -78,17 +86,17 @@ La réponse : construire un **mini-projet complet et documenté** — `GlassTrac
 │                                                             │
 │   dmDatabase.pas            uCommandeDAO.pas                │
 │   ┌──────────────────┐      ┌──────────────────┐            │
-│   │ TFDConnection    │      │ Insert / GetAll   │            │
-│   │ TFDTransaction   │      │ MAJStatut         │            │
-│   │ ConfigurerConn.  │      │ Supprimer         │            │
+│   │ TFDConnection    │      │ Inserer()         │            │
+│   │ TFDTransaction   │      │ MAJStatut()       │            │
+│   │ TFDQuery x6      │      │ Supprimer()       │            │
 │   └──────────────────┘      └──────────────────┘            │
 └─────────────────────┬───────────────────────────────────────┘
                       │  OCI / FireDAC Native Driver
 ┌─────────────────────▼───────────────────────────────────────┐
 │                   🗄️  BASE DE DONNÉES ORACLE 19c             │
 │                                                             │
-│   Tables : COMMANDES · FLACONS · LOTS_FABRICATION           │
-│            CLIENTS · CONTROLES_QUALITE                      │
+│   Tables : COMMANDES · FLACONS · LOTS_PRODUCTION            │
+│            CLIENTS · CONTROLE_QUALITE                       │
 │   Objets  : Séquences · Triggers BEFORE INSERT              │
 │             Package PKG_PRODUCTION · Vues                   │
 └─────────────────────────────────────────────────────────────┘
@@ -104,45 +112,35 @@ La réponse : construire un **mini-projet complet et documenté** — `GlassTrac
 Form principale de gestion des commandes clients.
 ```pascal
 TfrmCommandes = class(TForm)
-  // Composants visuels (générés par le designer)
-  grdCommandes : TDBGrid;         // Grille liée aux données
-  srcCommandes : TDataSource;     // Médiateur Query ↔ Grid
-  edtRecherche : TEdit;           // Filtre temps réel
-  btnAjouter   : TButton;
+  DBGrid1      : TDBGrid;      // Grille liée aux données
+  cboStatut    : TComboBox;    // Filtre par statut
+  btnNouvel    : TButton;
   btnSupprimer : TButton;
-  // Handlers
   procedure FormCreate(Sender: TObject);
-  procedure btnAjouterClick(Sender: TObject);
-  procedure edtRechercheChange(Sender: TObject);
+  procedure btnNouvelClick(Sender: TObject);
+  procedure btnFiltrerClick(Sender: TObject);
 end;
 ```
 
 #### `frmProduction.pas`
-Suivi des lots de fabrication : état four, contrôle qualité, expédition.
+Suivi des lots de fabrication : sélection commande, création lot, résultats, stats fours.
 
 ---
 
 ### ⚙️ Couche Métier
 
-#### `uCommande.pas`
-Classes métier `TCommande` et `TFlacon` avec héritage Object Pascal.
+#### `uModeles.pas`
+Classes métier avec héritage Object Pascal.
 ```pascal
-// Héritage : TFlacon hérite de TArticle
-TArticle = class
-  function ToString: String; virtual;
+TCommande = class
+  function EstModifiable: Boolean;           // Règle métier
+  function TransitionStatutAutorisee(...): Boolean;
 end;
 
-TFlacon = class(TArticle)
-  private
-    FCapacite : Integer;
-    FMatiere  : String;
-  public
-    function ToString: String; override;  // Polymorphisme
+TLotProduction = class
+  function EstEnAlerteCasse: Boolean;        // Seuil 5%
 end;
 ```
-
-#### `uProduction.pas`
-Logique métier des lots : validation, transitions d'état, calcul rendement.
 
 ---
 
@@ -153,22 +151,25 @@ Logique métier des lots : validation, transitions d'état, calcul rendement.
 
 ```pascal
 TDataModule1 = class(TDataModule)
-  FDConn    : TFDConnection;    // Connexion Oracle unique
-  FDTrans   : TFDTransaction;   // Gestion transactions
-  procedure DataModuleCreate(Sender: TObject);   // Init connexion
-  procedure DataModuleDestroy(Sender: TObject);  // Cleanup
-  procedure ConfigurerConnexion;
-  function  ExecuterProcedure(aNom: String; aParams: array of Variant): Variant;
+  FDConnection1  : TFDConnection;
+  FDTransaction1 : TFDTransaction;
+  qryCommandes   : TFDQuery;
+  qryLots        : TFDQuery;
+  qryDashboard   : TFDQuery;
+  procedure Connecter(const aMotDePasse: string);
+  procedure DebuterTransaction;
+  procedure Valider;
+  procedure Annuler;
 end;
 ```
 
 #### `uCommandeDAO.pas` — Pattern DAO (Data Access Object)
 ```pascal
 TCommandeDAO = class
-  function GetAll(aStatut: String = ''): TFDQuery;
-  function Inserer(aClientID, aQuantite: Integer): Integer;  // RETURNING INTO
-  procedure MAJStatut(aCmdID: Integer; aStatut: String);
-  procedure Supprimer(aCmdID: Integer);
+  function  Inserer(aClientId, aFlaconId, aQuantite: Integer): Integer;
+  procedure MAJStatut(aCmdId: Integer; const aStatut: string);
+  procedure Supprimer(aCmdId: Integer);
+  function  PeutEtreModifiee(aCmdId: Integer): Boolean;
 end;
 ```
 
@@ -181,14 +182,14 @@ end;
 | Catégorie | Éléments |
 |---|---|
 | **Architecture** | Application 3-tiers, DataModule pattern, fichier `.dpr` |
-| **Composants UI** | `TForm`, `TDBGrid`, `TDataSource`, `TDBNavigator`, `TDBEdit` |
-| **FireDAC** | `TFDConnection`, `TFDQuery`, `TFDTable`, `TFDTransaction` |
+| **Composants UI** | `TForm`, `TDBGrid`, `TDataSource`, `TDBLookupComboBox` |
+| **FireDAC** | `TFDConnection`, `TFDQuery`, `TFDTransaction` |
 | **Liaison données** | `TDataSource` comme médiateur Query ↔ composants visuels |
 | **Object Pascal** | Classes, héritage, polymorphisme, `virtual`/`override` |
 | **Gestion mémoire** | `Create(nil)` + `try/finally/Free` (pas de GC !) |
-| **Exceptions** | `try/except on E: EFDDBEngineException do` |
-| **CRUD** | `.Append`, `.Edit`, `.Post`, `.Delete`, `.ApplyUpdates` |
-| **Cycle de vie** | `FormCreate`, `FormClose`, `DataModuleCreate` |
+| **Exceptions** | `try/except on E: Exception do` |
+| **CRUD** | `ExecSQL`, `RETURNING INTO`, `Open`, `Close` |
+| **Cycle de vie** | `FormCreate`, `FormDestroy`, `DataModuleCreate` |
 
 ### 🗄️ Oracle 19c / PL/SQL
 
@@ -202,21 +203,6 @@ end;
 | **Optimisation** | `EXPLAIN PLAN`, index composites, `ROWNUM` vs `FETCH FIRST` |
 | **Transactions** | `COMMIT`, `ROLLBACK`, `SAVEPOINT`, isolation en Delphi |
 | **Exceptions PL/SQL** | `WHEN NO_DATA_FOUND`, exceptions nommées custom |
-
----
-
-## 🖥️ Guide interactif — Les 6 onglets
-
-```
-┌─────────────┬──────────────────┬─────────────┬─────────────────┬──────────────┬──────────────┐
-│ 🏭 Le Projet│ ⚡ Delphi Fondmt │ 🗄️ Oracle   │ 💾 Persistance  │ 🎯 Quiz      │ 📋 Cheat Sheet│
-├─────────────┼──────────────────┼─────────────┼─────────────────┼──────────────┼──────────────┤
-│ Architecture│ Structure projet │ DDL complet │ DataModule deep │ 6 questions  │ Mémo Delphi  │
-│ Schéma BDD  │ Classes/Héritage │ PL/SQL Pkg  │ Pattern DAO     │ Score & expl │ Fonctions SQL│
-│ Contexte    │ FireDAC CRUD     │ Requêtes    │ Transactions    │ Progression  │ Réponses clés│
-│ métier      │ Exceptions       │ Optimisation│ LiveBinding     │              │ entretien    │
-└─────────────┴──────────────────┴─────────────┴─────────────────┴──────────────┴──────────────┘
-```
 
 ---
 
@@ -238,16 +224,25 @@ git clone https://github.com/Spiritzen/saverglass-delphi-oracle.git
 cd saverglass-delphi-oracle
 ```
 
-### 2. Ouvrir le guide interactif
+### 2. Ajouter le screenshot de démo
 
 ```bash
-# Aucun serveur requis — ouvrir directement :
+# Copier votre screenshot dans assets/
+cp votre_screenshot.jpg assets/demo.jpg
+
+# Ou avec Claude CLI (automatisé) :
+claude -p "Copie le fichier demo.jpg dans le dossier assets/ du repo"
+```
+
+### 3. Ouvrir le guide interactif
+
+```bash
 start index.html          # Windows
 open index.html           # macOS
 xdg-open index.html       # Linux
 ```
 
-### 3. Initialiser la base Oracle (optionnel)
+### 4. Initialiser la base Oracle (optionnel)
 
 ```sql
 -- Dans SQL Developer, connecté en SYSDBA :
@@ -256,11 +251,10 @@ xdg-open index.html       # Linux
 @sql/data_test.sql     -- Insère des données de démo
 ```
 
-### 4. Ouvrir le projet Delphi (optionnel)
+### 5. Ouvrir le projet Delphi
 
 ```
 RAD Studio 12 → File → Open Project → src/GlassTrack.dpr
-Configurer la connexion dans dmDatabase.pas (host, user, password)
 F9 → Run
 ```
 
@@ -346,6 +340,7 @@ CALL PKG_PRODUCTION.MAJ_STATUT_LOT(:lot_id, :new_statut);
 - **`.Post` vs `.ApplyUpdates`** : deux niveaux de validation (mémoire vs base) — source de bugs insidieux
 - **`RETURNING INTO`** : réflexe à acquérir pour éviter les race conditions sur les ID générés
 - **La gestion mémoire** : en Delphi, pas de garbage collector. `Create` + `try/finally/Free` — toujours.
+- **Les fichiers `.dfm`** : ne jamais mettre de commentaires `//` dans un `.dfm` — Delphi ne les supporte pas !
 
 ### 🟢 Après — Ce que je retiens
 - L'architecture DataModule est **élégante** : séparation propre UI / données, partage global via variable `DataModule1`
@@ -365,17 +360,20 @@ saverglass-delphi-oracle/
 │
 ├── assets/
 │   ├── css/style.css           # Design glassmorphism custom
-│   └── js/app.js               # Tabs, quiz, copie de code
+│   ├── js/app.js               # Tabs, quiz, copie de code
+│   └── demo.jpg                # Screenshot de l'application GlassTrack
 │
-├── src/                        # Code Delphi (démonstratif)
+├── src/                        # Code Delphi compilable
 │   ├── GlassTrack.dpr          # Point d'entrée application
-│   ├── frmCommandes.pas        # UI — gestion commandes
-│   ├── frmProduction.pas       # UI — suivi production
-│   ├── uCommande.pas           # BLL — classes métier
-│   ├── uProduction.pas         # BLL — logique fabrication
-│   ├── dmDatabase.pas          # DAL — DataModule connexion
-│   ├── dmCommandes.pas         # DAL — DataModule données
-│   └── uCommandeDAO.pas        # DAL — pattern DAO CRUD
+│   ├── frmMain.pas / .dfm      # Dashboard principal + KPIs
+│   ├── frmCommandes.pas / .dfm # UI — gestion commandes
+│   ├── frmProduction.pas / .dfm# UI — suivi production
+│   ├── frmQualite.pas / .dfm   # UI — contrôle qualité
+│   ├── dmDatabase.pas / .dfm   # DAL — DataModule connexion
+│   ├── uModeles.pas            # BLL — classes métier
+│   ├── uCommandeDAO.pas        # DAL — pattern DAO commandes
+│   ├── uProductionDAO.pas      # DAL — pattern DAO production
+│   └── uConstants.pas          # Constantes globales
 │
 └── sql/
     ├── schema.sql              # DDL : tables, séquences, triggers
